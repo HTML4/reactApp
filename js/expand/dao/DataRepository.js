@@ -63,7 +63,7 @@ export default class DataRepository {
                 reject(new Error("responseData is null"))
                 return;
               }
-              resolve({items: result})
+              resolve(result)
               this.saveRepository(url, result)
             })
       } else {

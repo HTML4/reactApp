@@ -130,6 +130,7 @@ export default class TrendingPage extends Component {
 class TrendingTab extends Component {
   constructor(props) {
     super(props)
+    this.FavoriteChanged = false
     this.dataRepository = new DataRepository(FLAG_STORAGE.flag_trending)
     this.state = {
       result: [],
@@ -138,12 +139,23 @@ class TrendingTab extends Component {
     }
   }
   componentWillReceiveProps(nextProps) {
+    console.log("this.FavoriteChanged", this.FavoriteChanged)
     if(this.props.timeSpan !== nextProps.timeSpan) {
       this.loadData(nextProps.timeSpan)
+    } else if(this.FavoriteChanged) {
+      this.FavoriteChanged = false
+      this.getFavoriteKeys()
     }
   }
   componentDidMount(){
     this.loadData(this.props.timeSpan, true)
+    this.listener = DeviceEventEmitter.addListener("favoriteChanged_trending", (text) => {
+      console.log("this.FavoriteChanged", this.FavoriteChanged)
+      this.FavoriteChanged = true
+    })
+  }
+  componentWillUnmount(){
+    this.listener && this.listener.remove()
   }
   getFavoriteKeys(){
     favoriteDao.getFavoriteKeys()
@@ -165,14 +177,10 @@ class TrendingTab extends Component {
     for(let i = 0; i < items.length; i++) {
       projectModels.push(new ProjectModel(items[i], Utils.checkFavorite(items[i], this.state.favoriteKeys)))
     }
+    console.log("projectModels", projectModels)
     this.setState({
       result: projectModels,
       isLoading: false
-    })
-  }
-  changeLoading(val) {
-    this.setState({
-      isLoading: val
     })
   }
   getFetchUrl(timeSpan, category){
@@ -183,9 +191,9 @@ class TrendingTab extends Component {
     const url = this.getFetchUrl(timeSpan, this.props.tabLabel)
     this.dataRepository.fetchRepository(url)
       .then(result => {
-        this.items = result && result.items ? result.items : []
+        this.items = result && result.items ? result.items : result ? result : [];
         this.getFavoriteKeys()
-        if(result && result.update_date && !this.dataRepository.checkData(result.update_date)) {
+        if(!this.items || isRefresh && result && result.update_date && !this.dataRepository.checkData(result.update_date)) {
           DeviceEventEmitter.emit("showToast", "数据过时")
           return this.dataRepository.fetchNetRepository(url)
         } else {
@@ -204,25 +212,27 @@ class TrendingTab extends Component {
         this.setState({isLoading: false})
       })
   }
-  onSelect(item) {
+  onSelect(item, projectModel) {
     this.props.navigation.navigate("RepositoryDetail", {
       item,
+      projectModel,
+      flag: FLAG_STORAGE.flag_trending,
       ...this.props
     })
   }
   //favoriteIcon 单机回调函数
   onFavorite(item, isFavorite){
     if(isFavorite) {
-      favoriteDao.saveFavoriteItem(item.fullName.toString(), JSON.stringify(item))
+      favoriteDao.saveFavoriteItem(item.fullName, JSON.stringify(item))
     } else {
-      favoriteDao.removeFavoriteItem(item.fullName.toString())
+      favoriteDao.removeFavoriteItem(item.fullName)
     }
   }
   renderRow(projectModel){
     return (
       <TrendingCell
         projectModel={projectModel}
-        onSelect={(item) => this.onSelect(item)}
+        onSelect={(item) => this.onSelect(item, projectModel)}
         onFavorite={(item, isFavorite) => this.onFavorite(item, isFavorite)}/>
     )
   }
@@ -236,7 +246,7 @@ class TrendingTab extends Component {
             <RefreshControl
               title='Loading...'
               refreshing={this.state.isLoading}
-              onRefresh={() => this.loadData(this.props.timeSpan)}
+              onRefresh={() => this.loadData(this.props.timeSpan, true)}
             />
           }
           renderItem={({item}) => this.renderRow(item)}

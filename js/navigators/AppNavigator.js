@@ -3,10 +3,13 @@ import React from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import HomePage from '../page/HomePage'
 import TrendingPage from '../page/TrendingPage'
+import FavoritePage from '../page/FavoritePage'
 import MyPage from '../page/my/MyPage'
 import CustomKeyPage from '../page/my/CustomKeyPage'
 import SortKeyPage from '../page/my/SortKeyPage'
 import RepositoryDetail from '../page/RepositoryDetail'
+import AboutPage from '../page/about/AboutPage'
+import WebViewPage from '../page/WebViewPage'
 
 export const AppTabNavigator = TabNavigator({
   HomePage: {
@@ -26,6 +29,19 @@ export const AppTabNavigator = TabNavigator({
     screen: TrendingPage,
     navigationOptions: {
       tabBarLabel: "趋势",
+      tabBarIcon: ({tintColor, focused}) => (
+        <Ionicons
+          name={focused ? "ios-home" : "ios-home-outline"}
+          size={26}
+          style={{color: tintColor}}
+        />
+      )
+    }
+  },
+  FavoritePage: {
+    screen: FavoritePage,
+    navigationOptions: {
+      tabBarLabel: "收藏",
       tabBarIcon: ({tintColor, focused}) => (
         <Ionicons
           name={focused ? "ios-home" : "ios-home-outline"}
@@ -68,6 +84,12 @@ export const AppStackNavigator = StackNavigator({
   },
   RepositoryDetail: {
     screen: RepositoryDetail
+  },
+  AboutPage: {
+    screen: AboutPage
+  },
+  WebViewPage: {
+    screen: WebViewPage
   },
 }, {
     navigationOptions: {
