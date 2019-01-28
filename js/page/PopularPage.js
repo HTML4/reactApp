@@ -17,6 +17,8 @@ import LanguageDao, {FLAG_LANGUAGE} from "../expand/dao/LanguageDao"
 import FavoriteDao from "../expand/dao/FavoriteDao"
 import HttpUtils from "../utils/HttpUtils"
 import Utils from "../utils/Utils"
+import ActionUtils from "../utils/ActionUtils"
+
 import RepositoryCell from "../common/RepositoryCell"
 import DataRepository, {FLAG_STORAGE} from "../expand/dao/DataRepository"
 import ProjectModel from "../model/ProjectModel"
@@ -48,10 +50,21 @@ export default class PopularPage extends Component {
       console.log(error)
     })
   }
+  renderRightButton(){
+    return(
+      <View>
+        <TouchableOpacity onPress={() => this.props.navigation.navigate("SearchPage")}>
+          <View style={{padding: 5, marginRight: 8}}>
+            <Image style={{width: 24, height: 24}} source={require("../../res/images/ic_search_white_48pt.png")}/>
+          </View>
+        </TouchableOpacity>
+      </View>
+    )
+  }
   render() {
     return (
       <View style={styles.container}>
-        <NavigationBar title="最热"/>
+        <NavigationBar title="最热" rightButton={this.renderRightButton()}/>
         {
           this.state.languages && this.state.languages.length > 0 ? (
             <ScrollableTabView
@@ -85,7 +98,6 @@ class PopularTab extends Component {
     }
   }
   componentWillReceiveProps(nextProps){
-    console.log("nextProps")
     if(this.FavoriteChanged) {
       this.FavoriteChanged = false
       this.getFavoriteKeys()
@@ -133,7 +145,7 @@ class PopularTab extends Component {
       .then(result => {
         this.items = result && result.items ? result.items : result ? result : [];
         this.getFavoriteKeys()
-        if(!this.items || isRefresh && result && result.update_date && !this.dataRepository.checkData(result.update_date)) {
+        if(!this.items || isRefresh && result && result.update_date && !Utils.checkDate(result.update_date)) {
           DeviceEventEmitter.emit("showToast", "数据过时")
           return this.dataRepository.fetchNetRepository(url)
         } else {
@@ -154,14 +166,7 @@ class PopularTab extends Component {
         })
       })
   }
-  onSelect(item, projectModel) {
-    this.props.navigation.navigate("RepositoryDetail", {
-      item,
-      projectModel,
-      flag: FLAG_STORAGE.flag_popular,
-      ...this.props
-    })
-  }
+
   //favoriteIcon 单机回调函数
   onFavorite(item, isFavorite){
     if(isFavorite) {
@@ -174,8 +179,13 @@ class PopularTab extends Component {
     return (
       <RepositoryCell
         projectModel={projectModel}
-        onSelect={(item) => this.onSelect(item, projectModel)}
-        onFavorite={(item, isFavorite) => this.onFavorite(item, isFavorite)}/>
+        onSelect={(item) => ActionUtils.onSelect({
+          item,
+          projectModel,
+          flag: FLAG_STORAGE.flag_popular,
+          ...this.props
+        })}
+        onFavorite={(item, isFavorite) => ActionUtils.onFavorite(favoriteDao, item, isFavorite)}/>
     )
   }
   render() {

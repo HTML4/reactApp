@@ -3,7 +3,7 @@ import {
 } from "react-native"
 import Trending from "GitHubTrending";
 
-export const FLAG_STORAGE = {flag_popular: "popular", flag_trending: "trending"}
+export const FLAG_STORAGE = {flag_popular: "popular", flag_trending: "trending", flag_my: "my"}
 export default class DataRepository {
   constructor(flag) {
     this.flag = flag
@@ -70,12 +70,21 @@ export default class DataRepository {
         fetch(url)
           .then(response => response.json())
           .then(result => {
-            if(!result) {
-              reject(new Error("responseData is null"))
-              return;
-            } else {
+            // if(!result) {
+            //   reject(new Error("responseData is null"))
+            //   return;
+            // } else {
+            //   resolve(result.items)
+            //   this.saveRepository(url, result.items)
+            // }
+            if(this.flag === FLAG_STORAGE.flag_my && result) {
+              resolve(result)
+              this.saveRepository(url, result)
+            } else if(result && result.items) {
               resolve(result.items)
               this.saveRepository(url, result.items)
+            } else {
+              reject(new Error("responseData is null"))
             }
           })
           .catch(error => reject(error))
@@ -84,17 +93,14 @@ export default class DataRepository {
   }
   saveRepository(url, items, callBack) {
     if(!url || !items) return;
-    const wrapData = {items, update_date: new Date().getTime()}
+    let wrapData
+    if(this.flag === FLAG_STORAGE.flag_my) {
+      wrapData = {item, update_date: new Date().getTime()}
+    } else {
+      wrapData = {items, update_date: new Date().getTime()}
+    }
+
     AsyncStorage.setItem(url, JSON.stringify(wrapData), callBack)
   }
-  // 判断数据是否过时 longTime 是时间戳
-  checkData(longTime) {
-    const cDate = new Date()
-    const tDate = new Date()
-    tDate.setTime(longTime)
-    if(cDate.getMonth() !== tDate.getMonth()) return false;
-    if(cDate.getDay() !== tDate.getDay()) return false;
-    if(cDate.getHours() - tDate.getHours() > 4) return false;
-    return true
-  }
+
 }

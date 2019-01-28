@@ -12,6 +12,8 @@ import {
   DeviceEventEmitter
 } from 'react-native';
 import HttpUtils from "../utils/HttpUtils"
+import Utils from "../utils/Utils"
+import ActionUtils from "../utils/ActionUtils"
 import RepositoryCell from "../common/RepositoryCell"
 import DataRepository, {FLAG_STORAGE} from "../expand/dao/DataRepository"
 const URL = 'https://api.github.com/search/repositories?q=';
@@ -42,7 +44,7 @@ export default class PopularTab extends Component {
         const items = result && result.items ? result.items : []
         this.changeLoading(false)
         this.setState({result: items})
-        if(result && result.update_date && !this.dataRepository.checkData(result.update_date)) {
+        if(result && result.update_date && !Utils.checkDate(result.update_date)) {
           DeviceEventEmitter.emit("showToast", "数据过时")
           return this.dataRepository.fetchNetRepository(url)
         } else {
@@ -59,17 +61,15 @@ export default class PopularTab extends Component {
         this.changeLoading(false)
       })
   }
-  onSelect(item) {
-    this.props.navigation.navigate("RepositoryDetail", {
-      item,
-      ...this.props
-    })
-  }
+
   renderRow(data){
     return (
       <RepositoryCell
         data={data}
-        onSelect={(item) => this.onSelect(item)}/>
+        onSelect={(item) => ActionUtils.onSelect({
+          item,
+          ...this.props
+        })/>
     )
   }
   render() {

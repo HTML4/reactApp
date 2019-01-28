@@ -1,3 +1,5 @@
+import React, { Component } from 'react';
+
 //更多菜单
 
 // export const MORE_MENU = {

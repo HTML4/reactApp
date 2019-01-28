@@ -21,6 +21,8 @@ import HttpUtils from "../utils/HttpUtils"
 import TimeSpan from "../model/TimeSpan"
 import FavoriteDao from "../expand/dao/FavoriteDao"
 import Utils from "../utils/Utils"
+import ActionUtils from "../utils/ActionUtils"
+
 import ProjectModel from "../model/ProjectModel"
 
 const API_URL = 'https://github.com/trending/';
@@ -177,7 +179,6 @@ class TrendingTab extends Component {
     for(let i = 0; i < items.length; i++) {
       projectModels.push(new ProjectModel(items[i], Utils.checkFavorite(items[i], this.state.favoriteKeys)))
     }
-    console.log("projectModels", projectModels)
     this.setState({
       result: projectModels,
       isLoading: false
@@ -193,7 +194,7 @@ class TrendingTab extends Component {
       .then(result => {
         this.items = result && result.items ? result.items : result ? result : [];
         this.getFavoriteKeys()
-        if(!this.items || isRefresh && result && result.update_date && !this.dataRepository.checkData(result.update_date)) {
+        if(!this.items || isRefresh && result && result.update_date && !Utils.checkDate(result.update_date)) {
           DeviceEventEmitter.emit("showToast", "数据过时")
           return this.dataRepository.fetchNetRepository(url)
         } else {
@@ -212,14 +213,7 @@ class TrendingTab extends Component {
         this.setState({isLoading: false})
       })
   }
-  onSelect(item, projectModel) {
-    this.props.navigation.navigate("RepositoryDetail", {
-      item,
-      projectModel,
-      flag: FLAG_STORAGE.flag_trending,
-      ...this.props
-    })
-  }
+
   //favoriteIcon 单机回调函数
   onFavorite(item, isFavorite){
     if(isFavorite) {
@@ -232,8 +226,13 @@ class TrendingTab extends Component {
     return (
       <TrendingCell
         projectModel={projectModel}
-        onSelect={(item) => this.onSelect(item, projectModel)}
-        onFavorite={(item, isFavorite) => this.onFavorite(item, isFavorite)}/>
+        onSelect={(item) => ActionUtils.onSelect({
+          item,
+          projectModel,
+          flag: FLAG_STORAGE.flag_trending,
+          ...this.props
+        })}
+        onFavorite={(item, isFavorite) => ActionUtils.onFavorite(favoriteDao, item, isFavorite, FLAG_LANGUAGE.flag_trending)}/>
     )
   }
   render() {

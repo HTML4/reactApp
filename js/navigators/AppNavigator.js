@@ -10,6 +10,8 @@ import SortKeyPage from '../page/my/SortKeyPage'
 import RepositoryDetail from '../page/RepositoryDetail'
 import AboutPage from '../page/about/AboutPage'
 import WebViewPage from '../page/WebViewPage'
+import AboutMePage from '../page/about/AboutMePage'
+import SearchPage from '../page/SearchPage'
 
 export const AppTabNavigator = TabNavigator({
   HomePage: {
@@ -90,6 +92,12 @@ export const AppStackNavigator = StackNavigator({
   },
   WebViewPage: {
     screen: WebViewPage
+  },
+  AboutMePage: {
+    screen: AboutMePage
+  },
+  SearchPage: {
+    screen: SearchPage
   },
 }, {
     navigationOptions: {

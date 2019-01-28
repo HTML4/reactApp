@@ -16,6 +16,7 @@ import NavigationBar from "../common/NavigationBar"
 import FavoriteDao from "../expand/dao/FavoriteDao"
 import Utils from "../utils/Utils"
 import ArrayUtils from "../utils/ArrayUtils"
+import ActionUtils from "../utils/ActionUtils"
 
 import RepositoryCell from "../common/RepositoryCell"
 import TrendingCell from "../common/TrendingCell"
@@ -83,22 +84,10 @@ class FavoriteTab extends Component {
           this.setState({isLoading: false})
         })
   }
-  onSelect(item, projectModel) {
-    this.props.navigation.navigate("RepositoryDetail", {
-      item,
-      projectModel,
-      flag: FLAG_STORAGE.flag_popular,
-      ...this.props
-    })
-  }
+
   //favoriteIcon 单机回调函数
   onFavorite(item, isFavorite){
-    const key = item.fullName ? item.fullName : item.id.toString()
-    if(isFavorite) {
-      this.favoriteDao.saveFavoriteItem(key, JSON.stringify(item))
-    } else {
-      this.favoriteDao.removeFavoriteItem(key)
-    }
+    ActionUtils.onFavorite(this.favoriteDao, item, isFavorite, this.props.flag)
     ArrayUtils.updateArray(this.unFavoriteItems, item)
     if(this.unFavoriteItems.length > 0) {
       if(this.props.flag === FLAG_STORAGE.flag_popular) {
@@ -113,7 +102,12 @@ class FavoriteTab extends Component {
     return (
       <CellComponent
         projectModel={projectModel}
-        onSelect={(item) => this.onSelect(item, projectModel)}
+        onSelect={(item) => ActionUtils.onSelect({
+          item,
+          projectModel,
+          flag: FLAG_STORAGE.flag_popular,
+          ...this.props
+        })}
         onFavorite={(item, isFavorite) => this.onFavorite(item, isFavorite)}/>
     )
   }

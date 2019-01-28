@@ -11,15 +11,89 @@ import {
 } from 'react-native';
 import ParallaxScrollView from 'react-native-parallax-scroll-view';
 import ViewUtils from "../../utils/ViewUtils"
+import FavoriteDao from "../../expand/dao/FavoriteDao"
+import RepositoryUtils from "../../expand/dao/RepositoryUtils"
+import {FLAG_STORAGE} from "../../expand/dao/DataRepository"
+import ProjectModel from "../../model/ProjectModel"
+import Utils from "../../utils/Utils"
+import ActionUtils from "../../utils/ActionUtils"
+
+import RepositoryCell from "../../common/RepositoryCell"
 
 export const FLAG_ABOUT = {flag_about: "about", flag_about_me: "about_me"}
 export default class AboutCommon {
-  constructor(props, updateState, flag_about) {
+  constructor(props, updateState, flag_about, config) {
     this.props = props
     this.updateState = updateState
     this.flag_about = flag_about
+    this.config = config
+    this.repositories = []
+    this.favoriteKeys = ""
+    this.favoriteDao = new FavoriteDao(FLAG_STORAGE.flag_popular)
+    this.repositoryUtils = new RepositoryUtils(this)
+  }
+  componentDidMount(){
+    if(this.flag_about === FLAG_ABOUT.flag_about) {
+      this.repositoryUtils.fetchRepository(this.config.info.currentRepoUrl)
+    } else {
+      const urls = []
+      const items = this.config.items
+      console.log("items", items)
+      for(let i = 0; i < items.length; i++) {
+        urls.push(this.config.info.url + items[i])
+      }
+      this.repositoryUtils.fetchRepositories(urls)
+    }
+  }
+  //通知数据发生改变
+  //items 改变的数据
+  onNotifyDataChanged(items) {
+    this.updateFavorite(items)
+  }
+  //更新用户收藏状态
+  async updateFavorite(repositories) {
+    if(repositories) this.repositories = repositories
+    if(!repositories) return
+    if(!this.favoriteKeys) {
+      this.favoriteKeys = await this.favoriteDao.getFavoriteKeys()
+    }
+    let projectModels = []
+    let items = this.repositories
+    for(let i = 0; i < items.length; i++) {
+      let data = this.repositories[i];
+      let item = data.item ? data.item : data;
+      projectModels.push({
+        isFavorite: Utils.checkFavorite(item, this.favoriteKeys || []),
+        item
+      })
+    }
+    this.updateState({
+      projectModels
+    })
   }
 
+
+  //创建项目视图
+  renderRepository(projectModels){
+    if(!projectModels || projectModels.length === 0) return null
+    const views = []
+    for(let i = 0; i < projectModels.length; i++){
+      const projectModel = projectModels[i]
+      views.push(
+        <RepositoryCell
+          key={projectModel.item.id}
+          projectModel={projectModel}
+          onSelect={(item) => ActionUtils.onSelect({
+            item,
+            projectModel,
+            flag: FLAG_STORAGE.flag_popular,
+            ...this.props
+          })}
+          onFavorite={(item, isFavorite) => ActionUtils.onFavorite(this.favoriteDao, item, isFavorite)}/>
+      )
+    }
+    return views
+  }
   getParallaxRenderConfig(params){
     let config = {}
     config.renderBackground = () => (

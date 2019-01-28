@@ -44,6 +44,7 @@ export default class MyPage extends Component {
       case MORE_MENU.Custom_Theme.name:
           break;
       case MORE_MENU.About_Author.name:
+          TargetComponent = "AboutMePage"
           break;
       case MORE_MENU.About.name:
           TargetComponent = "AboutPage"
@@ -51,7 +52,6 @@ export default class MyPage extends Component {
     }
 
     if(TargetComponent) {
-      console.log("TargetComponent", TargetComponent)
       this.props.navigation.navigate(TargetComponent, params)
     }
   }
@@ -104,23 +104,6 @@ export default class MyPage extends Component {
           {this.getItem(MORE_MENU.About_Author)}
           <View style={GlobalStyles.line}/>
         </ScrollView>
-
-
-        <Button title="自定义标签" onPress={() => this.props.navigation.navigate("CustomKeyPage", {
-          flag: FLAG_LANGUAGE.flag_key
-          })}/>
-        <Button title="标签排序" onPress={() => this.props.navigation.navigate("SortKeyPage", {
-          flag: FLAG_LANGUAGE.flag_key
-          })}/>
-        <Button title="移除标签" onPress={() => this.props.navigation.navigate("CustomKeyPage", {
-          isRemoveKey: true
-        })}/>
-        <Button title="自定义语言" onPress={() => this.props.navigation.navigate("CustomKeyPage", {
-          flag: FLAG_LANGUAGE.flag_language
-        })}/>
-        <Button title="语言排序" onPress={() => this.props.navigation.navigate("SortKeyPage", {
-          flag: FLAG_LANGUAGE.flag_language
-          })}/>
       </View>
     );
   }
